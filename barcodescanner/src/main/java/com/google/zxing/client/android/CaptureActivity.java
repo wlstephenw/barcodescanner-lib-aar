@@ -23,6 +23,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.hardware.Camera;
 import android.support.v4.content.LocalBroadcastManager;
+import android.view.MotionEvent;
 import android.widget.Button;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.DecodeHintType;
@@ -852,6 +853,50 @@ public final class CaptureActivity extends Activity implements SurfaceHolder.Cal
         }
       }
     }
+
+    // check if we need zoom support
+    if (getIntent().getBooleanExtra(Intents.Scan.ZOOM_SUPPORT, false))
+    {
+      this.viewfinderView.setOnTouchListener(new View.OnTouchListener(){
+         @Override
+         public boolean onTouch(View v, MotionEvent event) {
+           if (event.getPointerCount() == 1) {
+             // single touch, not want to handle.
+           } else {
+             switch (event.getAction() & MotionEvent.ACTION_MASK) {
+               case MotionEvent.ACTION_POINTER_DOWN:
+                 oldDist = getFingerSpacing(event);
+                 break;
+               case MotionEvent.ACTION_MOVE:
+                 float newDist = getFingerSpacing(event);
+                 if (newDist > oldDist) {
+                   cameraManager.handleZoom(true);
+                 } else if (newDist < oldDist) {
+                   cameraManager.handleZoom(false);
+                 }
+                 oldDist = newDist;
+                 break;
+             }
+           }
+           return true;
+         }
+       }
+      );
+    }
+
+  }
+
+  // this memeber should not be here, but only the onTouchEvent uses it, so...
+  private float oldDist = 1f;
+  /**
+   *
+   * @param event
+   * @return
+   */
+  private static float getFingerSpacing(MotionEvent event) {
+    float x = event.getX(0) - event.getX(1);
+    float y = event.getY(0) - event.getY(1);
+    return (float) Math.sqrt(x * x + y * y);
   }
 
   public void drawViewfinder() {

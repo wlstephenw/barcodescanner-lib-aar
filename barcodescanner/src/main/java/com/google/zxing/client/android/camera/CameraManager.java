@@ -380,4 +380,28 @@ public final class CameraManager {
     return new PlanarYUVLuminanceSource(rotation == Configuration.ORIENTATION_PORTRAIT ? rotatedData : data, width, height, rect.left, rect.top,
         rect.width(), rect.height(), false);
   }
+
+  /////////////////////////////adding the zoom support/////////////
+  /**
+   *
+   * @param isZoomIn
+     */
+  public void handleZoom(boolean isZoomIn)
+  {
+    Camera.Parameters params = this.camera.getCamera().getParameters();
+    if (params.isZoomSupported()) {
+      int maxZoom = params.getMaxZoom();
+      int zoom = params.getZoom();
+      if (isZoomIn && zoom < maxZoom) {
+        zoom++;
+      } else if (zoom > 0) {
+        zoom--;
+      }
+      params.setZoom(zoom);
+      this.camera.getCamera().setParameters(params);
+    } else {
+      Log.i(TAG, "zoom not supported");
+    }
+  }
+  ///////////////end zoom support/////////////////////
 }
